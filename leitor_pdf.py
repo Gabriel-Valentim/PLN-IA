@@ -1,5 +1,6 @@
 import PyPDF2
 import nltk
+
 nltk.download('stopwords')
 
 def retira_stop_words(texto):
@@ -15,7 +16,7 @@ def retira_stop_words(texto):
              cont = 1
 
 
-arquivo_pdf = open("artigo.pdf", 'rb')
+arquivo_pdf = open("artigos/artigo.pdf", 'rb')
 arquivo_saida = open("arquivo_saida.txt", 'w')
 
 pdf = PyPDF2.PdfReader(arquivo_pdf)
