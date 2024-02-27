@@ -1,6 +1,7 @@
 import PyPDF2
 import nltk
 import re
+import heapq
 
 nltk.download('stopwords')
 nltk.download('punkt')
@@ -24,13 +25,15 @@ def retira_stop_words(texto):
     #RETIRANDO STOP_WORDS
     for word in words_in_quote:
         if word.casefold() not in stop_wrds:
-            filtered_list.append(word.casefold())
+            if word != "–" :
+                filtered_list.append(word.casefold())
     
-    filtered_list = [re.sub('[,.!?;()]|', '', word) for word in filtered_list]
+    filtered_list = [re.sub('[-%,.!?;*:|()\[|\]“”]', '', word) for word in filtered_list]
 
     while '' in filtered_list:
         filtered_list.pop(filtered_list.index(''))
 
+    print(filtered_list)
     return filtered_list
 
 
@@ -51,7 +54,7 @@ def fazendo_lemmatizing(filtered_list):
         else:
              lemmatized_words.append(word)
 
-    print(lemmatized_words)
+    #print(lemmatized_words)
     return lemmatized_words
 
 
@@ -62,6 +65,26 @@ def fazendo_stemming(filtered_list):
         stemmed_words.append(stemmer.stem(words))
     
     return stemmed_words
+
+
+def termos_mais_citados(filtered_list):
+    word_counts = {}
+
+    for word in filtered_list:
+        if word in word_counts:
+            word_counts[word] += 1
+        else:
+            word_counts[word] = 1
+    
+    most_common_words = heapq.nlargest(10, word_counts.items(), key=lambda x: x[1])
+    
+    identificador = 1
+    print("\n10 TERMOS MAIS CITADOS:")
+    for word, count in most_common_words:
+        
+        print(identificador,"°:", f"{word}: {count}")
+        identificador += 1
+        
 
 
 def main():
@@ -104,17 +127,24 @@ def main():
     pdf = PyPDF2.PdfReader(arquivo_pdf)
 
     # Acessar a página pelo índice
-    pagina = pdf.pages[0]  # Para acessar a primeira página, use o índice 0
+    #pagina = pdf.pages[0]  # Para acessar a primeira página, use o índice 0
 
-    texto = pagina.extract_text()  # Extrair o texto da página
+    #texto = pdf.extract_text()  # Extrair o texto da página
+    texto_completo = ""
 
-    print(texto)
+    for pagina in pdf.pages:
+        texto_pagina = pagina.extract_text()
+        texto_completo += texto_pagina
+        print(texto_completo)
 
-    filtered_list = retira_stop_words(texto)
 
-    lemmatize_wrd = fazendo_lemmatizing(filtered_list)
+    tokenized_list = retira_stop_words(texto_completo)
+
+    lemmatize_wrd = fazendo_lemmatizing(tokenized_list)
 
     #stemmed_wrd = fazendo_stemming(lemmatize_wrd)
+
+    termos_mais_citados(tokenized_list)
 
     arquivo_pdf.close()
     arquivo_saida.close()
