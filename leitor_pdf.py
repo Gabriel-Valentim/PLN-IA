@@ -11,19 +11,40 @@ nltk.download('averaged_perceptron_tagger')
 from nltk.stem import PorterStemmer, WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+from nltk.util import trigrams
 
 lemmatizer = WordNetLemmatizer()
 stemmer = PorterStemmer()
 arquivo_saida = open("arquivo_saida.txt", 'w')
 
+
+def retira_referencias(texto):
+
+    words_in_quote = word_tokenize(texto, "english", False)
+    texto_sem_referencia = []
+    referencias_texto = []
+    referencias = False
+
+    for words in words_in_quote:
+        if words == "References" or words == "REFERENCES":
+            referencias = True
+        elif referencias == False:
+            texto_sem_referencia.append(words)
+        else:
+            referencias_texto.append(words)
+
+
+    return texto_sem_referencia, referencias_texto
+
+
+
 def retira_stop_words(texto):
     
-    words_in_quote = word_tokenize(texto, "english", False)
     stop_wrds = set(stopwords.words("english"))
     filtered_list = []
     
     #RETIRANDO STOP_WORDS
-    for word in words_in_quote:
+    for word in texto:
         if word.casefold() not in stop_wrds:
             if word != "–" :
                 filtered_list.append(word.casefold())
@@ -33,7 +54,7 @@ def retira_stop_words(texto):
     while '' in filtered_list:
         filtered_list.pop(filtered_list.index(''))
 
-    print(filtered_list)
+    #print(filtered_list)
     return filtered_list
 
 
@@ -84,7 +105,50 @@ def termos_mais_citados(filtered_list):
         
         print(identificador,"°:", f"{word}: {count}")
         identificador += 1
-        
+
+
+
+def extrai_objetivo(texto):
+    # Expressão regular para encontrar a frase inicial e tudo até o primeiro ponto final.
+    possiveis_objetivos = ['this study aimed', 'in this research']
+    texto_objetivo = ""
+
+    # Encontrar a posição do resumo (abstract)
+    inicio_abstract = texto.find("abstract")
+    if inicio_abstract != -1:
+        # Encontrar o final do resumo (abstract)
+        fim_abstract = texto.find("introduction", inicio_abstract)
+        if fim_abstract != -1:
+            texto_abstract = texto[inicio_abstract+len("abstract"):fim_abstract].strip()
+        else:
+            texto_abstract = texto[inicio_abstract+len("abstract"):].strip()
+
+    # Encontrar a posição da introdução (introduction)
+    inicio_introduction = texto.find("introduction")
+    if inicio_introduction != -1:
+        # Encontrar o final da introdução (introduction)
+        fim_introduction = texto.find("ii.", inicio_introduction)
+        if fim_introduction != -1:
+            texto_introduction = texto[inicio_introduction+len("introduction"):fim_introduction].strip()
+        else:
+            texto_introduction = texto[inicio_introduction+len("introduction"):].strip()
+
+    # Procurar o objetivo no resumo (abstract)
+    for objetivo in possiveis_objetivos:
+        match_abstract = re.search(re.escape(objetivo) + '(.*?)\.', texto_abstract, flags=re.IGNORECASE | re.DOTALL)
+        match_introduction = re.search(re.escape(objetivo) + '(.*?)\.', texto_introduction, flags=re.IGNORECASE | re.DOTALL)
+        if match_abstract:
+            texto_objetivo = match_abstract.group(0)
+            break
+        elif match_introduction:
+            texto_objetivo = match_introduction.group(0)
+            break
+
+    print("==========================")
+    print(texto_objetivo)
+    print("==========================")
+
+    return texto_objetivo
 
 
 def main():
@@ -126,19 +190,27 @@ def main():
 
     pdf = PyPDF2.PdfReader(arquivo_pdf)
 
+
     # Acessar a página pelo índice
     #pagina = pdf.pages[0]  # Para acessar a primeira página, use o índice 0
 
     #texto = pdf.extract_text()  # Extrair o texto da página
     texto_completo = ""
+    texto_aux = ""
 
     for pagina in pdf.pages:
         texto_pagina = pagina.extract_text()
         texto_completo += texto_pagina
-        print(texto_completo)
+        texto_aux += texto_pagina.lower()
+        
 
 
-    tokenized_list = retira_stop_words(texto_completo)
+    print(texto_aux)
+    obj = extrai_objetivo(texto_aux)
+
+    texto_sem_referencia, referencias = retira_referencias(texto_completo)
+
+    tokenized_list = retira_stop_words(texto_sem_referencia)
 
     lemmatize_wrd = fazendo_lemmatizing(tokenized_list)
 
