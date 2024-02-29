@@ -193,8 +193,8 @@ def main():
 
     # Acessar a página pelo índice
     #pagina = pdf.pages[0]  # Para acessar a primeira página, use o índice 0
-
     #texto = pdf.extract_text()  # Extrair o texto da página
+    
     texto_completo = ""
     texto_aux = ""
 
