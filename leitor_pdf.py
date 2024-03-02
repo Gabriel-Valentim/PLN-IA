@@ -160,25 +160,25 @@ def main():
             numero_artigo = int(input("Digite o número do artigo (0-9): "))
             if 0 <= numero_artigo < 10:
                 if numero_artigo == 0:
-                    nome_artigo = "artigos/artigo.pdf"
+                    nome_artigo = "artigos/artigo0.pdf"
                 elif numero_artigo == 1:
-                    nome_artigo = "artigos/artigo2.pdf"
+                    nome_artigo = "artigos/artigo1.pdf"
                 elif numero_artigo == 2:
-                    nome_artigo = "artigos/artigo3.pdf"
+                    nome_artigo = "artigos/artigo2.pdf"
                 elif numero_artigo == 3:
-                    nome_artigo = "artigos/artigo4.pdf"
+                    nome_artigo = "artigos/artigo3.pdf"
                 elif numero_artigo == 4:
-                    nome_artigo = "artigos/artigo5.pdf"
+                    nome_artigo = "artigos/artigo4.pdf"
                 elif numero_artigo == 5:
-                    nome_artigo = "artigos/artigo6.pdf"
+                    nome_artigo = "artigos/artigo5.pdf"
                 elif numero_artigo == 6:
-                    nome_artigo = "artigos/artigo7.pdf"
+                    nome_artigo = "artigos/artigo6.pdf"
                 elif numero_artigo == 7:
-                    nome_artigo = "artigos/artigo8.pdf"
+                    nome_artigo = "artigos/artigo7.pdf"
                 elif numero_artigo == 8:
-                    nome_artigo = "artigos/artigo9.pdf"
+                    nome_artigo = "artigos/artigo8.pdf"
                 elif numero_artigo == 9:
-                    nome_artigo = "artigos/artigo10.pdf"
+                    nome_artigo = "artigos/artigo9.pdf"
                 break
             else:
                 print("Número inválido. Digite um número entre 0 e 9.")
