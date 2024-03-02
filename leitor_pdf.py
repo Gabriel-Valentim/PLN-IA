@@ -110,7 +110,7 @@ def termos_mais_citados(filtered_list):
 
 def extrai_objetivo(texto):
     # Expressão regular para encontrar a frase inicial e tudo até o primeiro ponto final.
-    possiveis_objetivos = ['this study aimed', 'in this research']
+    possiveis_objetivos = ['this study', 'in this research', 'this paper', ' in this work']
     texto_objetivo = ""
 
     # Encontrar a posição do resumo (abstract)
