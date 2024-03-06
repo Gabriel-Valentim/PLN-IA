@@ -4,6 +4,8 @@ import re
 import heapq
 import random
 
+#tem que fazer um pip install wordcloud
+#tem que fazer um pip install matplotlib
 
 import matplotlib.pyplot as plt
 from wordcloud import WordCloud, STOPWORDS
