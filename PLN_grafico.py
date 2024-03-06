@@ -60,6 +60,7 @@ def extrair_informacoes():
 
     # Abrir nova janela para mostrar informações
     mostrar_resultados(obj, met, prob, contrib)
+    salvar_dados(obj, met, prob, contrib, referencias)
 
 def mostrar_resultados(obj, met, prob, contrib):
     resultados_window = tk.Toplevel(root)
@@ -402,6 +403,32 @@ def find_contribution(texto_completo):
     else:
         print("NAO FOI POSSIVEL ENCONTRAR AS CONTRIBUICOES")
         return []  # Retorna uma lista vazia se não encontrar contribuições
+
+
+def salvar_dados(obj, met, prob, contrib, referencias):
+    try:
+        nome_arquivo = filedialog.asksaveasfilename(defaultextension=".txt",
+                                                     filetypes=[("Arquivos de texto", "*.txt")])
+        
+        tam_contrib = len(contrib)
+        cont = 0
+        with open(nome_arquivo, 'w') as arquivo:
+            arquivo.write(f"Objetivo: {obj};;\n")
+            arquivo.write(f"Metodologia: {met};;\n")
+            arquivo.write(f"Problema: {prob};;\n")
+            arquivo.write("Contribuicoes:\n")
+            for c in contrib:
+                cont += 1
+                arquivo.write(f"{c}\n")
+                if cont == tam_contrib:
+                    arquivo.write(";;\n")
+                    cont = 0
+            arquivo.write(f"Referencias: {referencias} ;;\n")
+            #for ref in referencias:
+            #    arquivo.write(f"{ref}\n")
+        messagebox.showinfo("Sucesso", "Dados salvos com sucesso!")
+    except Exception as e:
+        messagebox.showerror("Erro", f"Ocorreu um erro ao salvar os dados: {str(e)}")
 
 
 # Executar o loop principal do Tkinter
