@@ -2,16 +2,28 @@ import PyPDF2
 import nltk
 import re
 import heapq
+import random
+
+#tem que fazer um pip install wordcloud
+#tem que fazer um pip install matplotlib
+
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud, STOPWORDS
 
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('wordnet')
 nltk.download('averaged_perceptron_tagger')
 
+
+
+from nltk import bigrams
 from nltk.stem import PorterStemmer, WordNetLemmatizer
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.util import trigrams
+from collections import Counter
+
 
 lemmatizer = WordNetLemmatizer()
 stemmer = PorterStemmer()
@@ -92,19 +104,31 @@ def termos_mais_citados(filtered_list):
     word_counts = {}
 
     for word in filtered_list:
-        if word in word_counts:
-            word_counts[word] += 1
-        else:
-            word_counts[word] = 1
+        if(len(word) == 1 or str.isdigit(word) or word == "et" or word == "al" or word == "td"):
+            continue
+        else:    
+            if word in word_counts:
+                word_counts[word] += 1
+            else:
+                word_counts[word] = 1
     
     most_common_words = heapq.nlargest(10, word_counts.items(), key=lambda x: x[1])
     
+    palavras = {}
     identificador = 1
+
     print("\n10 TERMOS MAIS CITADOS:")
     for word, count in most_common_words:
         
-        print(identificador,"°:", f"{word}: {count}")
+        print(f"{identificador}°: {word}: {count}")
+        palavras[word] = count
         identificador += 1
+
+    wordcloud = WordCloud(background_color="white").generate_from_frequencies(palavras)
+
+    wordcloud.to_file('wordcloud_common_words.png')
+
+
 
 
 
@@ -144,11 +168,172 @@ def extrai_objetivo(texto):
             texto_objetivo = match_introduction.group(0)
             break
 
-    print("==========================")
+    print("=============OBJETIVO=============")
     print(texto_objetivo)
-    print("==========================")
+    print("==================================")
 
     return texto_objetivo
+
+
+def extrai_problema(texto):
+    possiveis_problemas = ['problem', 'issue', 'challenge', 'limitation', 'drawback', 'constraint']
+    texto_problema = ""
+
+    # Encontrar a posição do resumo (abstract)
+    inicio_abstract = texto.find("abstract")
+    if inicio_abstract != -1:
+        # Encontrar o final do resumo (abstract)
+        fim_abstract = texto.find("introduction", inicio_abstract)
+        if fim_abstract != -1:
+            texto_abstract = texto[inicio_abstract+len("abstract"):fim_abstract].strip()
+        else:
+            texto_abstract = texto[inicio_abstract+len("abstract"):].strip()
+
+    # Procurar o problema no resumo (abstract)
+    for problema in possiveis_problemas:
+        matches = re.finditer(re.escape(problema), texto_abstract, flags=re.IGNORECASE)
+        for match in matches:
+            inicio = texto_abstract.rfind(".", 0, match.start()) + 1
+            fim = texto_abstract.find(".", match.end()) + 1
+            texto_problema += texto_abstract[inicio:fim]
+
+
+    if texto_problema == "":
+        inicio_introduction = texto.find("introduction")
+        if inicio_introduction != -1:
+            fim_introduction = texto.find("ii.", inicio_introduction)
+            if fim_introduction != -1:
+                texto_introduction = texto[inicio_introduction+len("introduction"):fim_introduction].strip()
+            else:
+                texto_introduction = texto[inicio_introduction+len("introduction"):].strip()
+
+        for problema in possiveis_problemas:
+            matches = re.finditer(re.escape(problema), texto_introduction, flags=re.IGNORECASE)
+            for match in matches:
+                inicio = texto_introduction.rfind(".", 0, match.start()) + 1
+                fim = texto_introduction.find(".", match.end()) + 1
+                texto_problema += texto_introduction[inicio:fim]
+
+
+
+    print("=============PROBLEMA=============")
+    print(f"\n {texto_problema}")
+    print("==================================")
+
+    return texto_problema
+
+
+def extrai_metodologia(texto):
+    possiveis_metodologias = ['method', 'approach', 'strategy', 'technique']
+    texto_metodologia = ""
+
+    # Encontrar a posição do resumo (abstract)
+    inicio_abstract = texto.find("abstract")
+    if inicio_abstract != -1:
+        # Encontrar o final do resumo (abstract)
+        fim_abstract = texto.find("introduction", inicio_abstract)
+        if fim_abstract != -1:
+            texto_abstract = texto[inicio_abstract+len("abstract"):fim_abstract].strip()
+        else:
+            texto_abstract = texto[inicio_abstract+len("abstract"):].strip()
+    else:
+        texto_abstract = ""
+
+    # Procurar a metodologia no resumo (abstract) ou na introdução
+    for metodologia in possiveis_metodologias:
+        matches = re.finditer(re.escape(metodologia), texto_abstract, flags=re.IGNORECASE)
+        for match in matches:
+            inicio = texto_abstract.rfind(".", 0, match.start()) + 1
+            fim = texto_abstract.find(".", match.end()) + 1
+            texto_metodologia += texto_abstract[inicio:fim]
+
+    
+    # Se não encontrar a palavra "method" no abstract, buscar na introdução
+    if texto_metodologia == "":
+        inicio_introduction = texto.find("introduction")
+        if inicio_introduction != -1:
+            fim_introduction = texto.find("ii.", inicio_introduction)
+            if fim_introduction != -1:
+                texto_introduction = texto[inicio_introduction+len("introduction"):fim_introduction].strip()
+            else:
+                texto_introduction = texto[inicio_introduction+len("introduction"):].strip()
+
+        for metodologia in possiveis_metodologias:
+            matches = re.finditer(re.escape(metodologia), texto_introduction, flags=re.IGNORECASE)
+            for match in matches:
+                inicio = texto_introduction.rfind(".", 0, match.start()) + 1
+                fim = texto_introduction.find(".", match.end()) + 1
+                texto_metodologia += texto_introduction[inicio:fim]
+
+
+    print("=============METODOLOGIA=============")
+    print(f"\n {texto_metodologia}")
+    print("=====================================")
+
+    return texto_metodologia
+
+
+
+def find_contribution(texto_completo):
+    key_wrd = ['contribu']
+    texto_contribuition = []
+
+    for word in key_wrd:
+        matches = re.finditer(re.escape(word), texto_completo, flags=re.IGNORECASE)
+        if matches:
+            for match in matches:
+                inicio = texto_completo.rfind(".", 0, match.start()) + 1
+                fim = texto_completo.find(".", match.end()) + 1
+                texto_contribuition.append(texto_completo[inicio:fim])
+    
+    if texto_contribuition != []:
+        cleaned_phrases = []
+
+        for phrase in texto_contribuition:
+            cleaned_phrases.append(re.sub(r"\n", "", phrase))
+        
+        print("** CONTRIBUICOES **")
+        print(cleaned_phrases)
+        print("** ************* **")
+    else:
+        print("NAO FOI POSSIVEL ENCONTRAR AS CONTRIBUICOES")
+
+
+def calcular_frequencia_stopwords(texto, stopwords_idioma):
+    palavras = nltk.word_tokenize(texto.lower())  # Tokeniza o texto
+    stopwords_texto = [palavra for palavra in palavras if palavra in stopwords_idioma]
+    return Counter(stopwords_texto)
+
+
+def identificar_idioma():
+
+    texto_ingles = "i went to the market to buy sweet potatoes and chicken"
+    texto_frances = "Je suis allé au marché acheter des patates douces et du poulet"
+    texto_portugues = "fui ao mercado comprar batata doce e frango"
+
+    #LINHA ABAIXO EH RESPONSAVEL POR PEGAR UMA FRASE ALEATORIA DO TEXTO E FAZER EM UMA IMPLEMENTACAO FUTURA
+    #frases = texto.split("\n")
+    #frase_aleatoria = random.choice(frases)
+
+    #PEGA AS STOP_WORDS DE CADA LINGUAGEM
+    stopwords_ingles = set(stopwords.words('english'))
+    stopwords_frances = set(stopwords.words('french'))
+
+    freq_stopwords_ingles = calcular_frequencia_stopwords(texto_portugues, stopwords_ingles)
+    freq_stopwords_frances = calcular_frequencia_stopwords(texto_portugues, stopwords_frances)
+    
+    # Calcula a soma das frequências para cada idioma
+    soma_ingles = sum(freq_stopwords_ingles.values())
+    soma_frances = sum(freq_stopwords_frances.values())
+    
+    if soma_ingles > soma_frances:
+        print(f"O idioma do texto eh: Inglês")
+    elif soma_frances > soma_ingles:
+        print(f"O idioma do texto eh: Francês")
+    else:
+        print(f"O idioma do texto eh: Indeterminado")
+
+
 
 
 def main():
@@ -203,19 +388,30 @@ def main():
         texto_completo += texto_pagina
         texto_aux += texto_pagina.lower()
         
+    identificar_idioma()
 
-
-    print(texto_aux)
+    #FUNCAO PARA EXTRAIR O OBJETIVO
     obj = extrai_objetivo(texto_aux)
 
+    find_contribution(texto_aux)
+
+    met = extrai_metodologia(texto_aux)
+
+    prob = extrai_problema(texto_aux)
+
+    #SEPARA A REFERENCIAS DO RESTO DO TEXTO
     texto_sem_referencia, referencias = retira_referencias(texto_completo)
 
+    #TOKENIZA O TEXTO E RETIRA STOP_WORDS
     tokenized_list = retira_stop_words(texto_sem_referencia)
 
+    #LEMATIZA O TEXTO
     lemmatize_wrd = fazendo_lemmatizing(tokenized_list)
 
+    #FAZ O STEMMING DE CADA PALAVRA
     #stemmed_wrd = fazendo_stemming(lemmatize_wrd)
 
+    #BUSCA PELOS 10 TERMOS QUE MAIS APARECEM NO TEXTO
     termos_mais_citados(tokenized_list)
 
     arquivo_pdf.close()
