@@ -19,12 +19,10 @@ from rank_bm25 import BM25Okapi
 lemmatizer = WordNetLemmatizer()
 stemmer = PorterStemmer()
 
-
 def retira_referencias(texto):
 
     words_in_quote = word_tokenize(texto, "english", False)
     texto_sem_referencia = []
-    referencias = False
 
     for words in words_in_quote:
         if words == "References" or words == "REFERENCES":
@@ -42,7 +40,6 @@ def remove_stop_words(texto):
     
     #RETIRANDO STOP_WORDS
     for word in texto:
-        if word.casefold() not in stop_wrds:
             if word != "–" :
                 filtered_list.append(word.casefold())
     
@@ -51,19 +48,44 @@ def remove_stop_words(texto):
     while '' in filtered_list:
         filtered_list.pop(filtered_list.index(''))
 
-    #print(filtered_list)
     return filtered_list
 
 
 def busca_bm25(word, corpus):
     tokenized_word  = word.split(" ")
-    print(tokenized_word)
-    #verificar essa função pode estar errada, ver de tentar fazer um for para ele percorrer cara lista de palavras 
+
     bm25 = BM25Okapi(corpus)
-    print(bm25)
+
     doc_scores = bm25.get_scores(tokenized_word)
-    print(doc_scores)
+    print(f"TF: {doc_scores}")
     bm25.get_top_n(tokenized_word, corpus, n=1)
+    calcula_idf(doc_scores)
+
+   
+
+
+
+def calcula_idf(doc_scores):
+    classificacao_idf = ""
+    score_idf = 0
+    contador = 0
+    for score in doc_scores:
+        if score != 0:
+            print(f"Artigo {contador}: {round(score,3)}")
+        score_idf += score
+        contador += 1
+    
+    score_idf = score_idf / len(doc_scores)
+
+    if round(score_idf,3) >= 0.65:
+        classificacao_idf = "IDF baixo, palavra comum."
+    else:
+        classificacao_idf = "IDF alto, termo raro."
+    
+    print(classificacao_idf)
+
+
+
     
 
 def main():
@@ -72,7 +94,21 @@ def main():
 
     while True:
         try:
-            termo_pesquisa = str(input("Digite uma palavra para buscar: "))
+            print("**************************************")
+            print("**                                  **")
+            print("**                                  **")
+            print("**                                  **")
+            print("**        Digite uma palavra        **")
+            print("**            para buscar           **")
+            print("**                                  **")
+            print("**                                  **")
+            print("**                                  **")
+            termo_pesquisa = str(input("=> "))
+            print("**                                  **")
+            print("**                                  **")
+            print("**                                  **")
+            print("**                                  **")
+            print("**************************************")
             break
         except ValueError:
             print("Entrada inválida.")
@@ -85,7 +121,7 @@ def main():
     while contador < 10:
 
         nome_arquivo = f"artigos/artigo{contador}.pdf"
-        print(nome_arquivo)
+        print(f"Lendo: {nome_arquivo}")
         arquivo_pdf = open(nome_arquivo, 'rb')
         pdf = PyPDF2.PdfReader(arquivo_pdf)
 
@@ -99,7 +135,7 @@ def main():
         texto_sem_referencia = retira_referencias(texto_completo)
         filtered_list = remove_stop_words(texto_sem_referencia)
 
-        #arquivo_saida.write(str(filtered_list))    NÃO FUNCIONA
+        #arquivo_saida.write(str(filtered_list))    NAO FUNCIONA
         lista_artigos.append(filtered_list)
         
         arquivo_pdf.close()
@@ -110,7 +146,6 @@ def main():
     with open("string_tokenized.json", "w") as arquivo:
             json.dump(lista_artigos, arquivo)
 
-    #print(lista_artigos) 
 
     busca_bm25(termo_pesquisa, lista_artigos)
     
